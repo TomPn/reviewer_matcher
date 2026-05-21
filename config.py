@@ -4,7 +4,6 @@ import os
 REVIEWER_ID_MATCHES_CSV = "reviewer_id_matches.csv"
 
 # Semantic Scholar API
-# Optional — register free at semanticscholar.org/product/api for 10x rate limit
 S2_API_KEY                 = "s2k-DZUfEpbDRRTwJSI4w5TjS1geiAZZk6V6xm0xDpMo"
 S2_MAX_PAPERS_PER_REVIEWER = 30
 

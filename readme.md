@@ -73,8 +73,15 @@ https://www.semanticscholar.org/author/Sharifa-Alghowinem/145001530
 Populate the vector database from `reviewer_id_matches.csv`:
 
 ```bash
-python ingest.py --reset
+python3 ingest.py
 ```
+
+To add a new reviewer, add their row to `reviewer_id_matches.csv` then rebuild the database:
+
+```bash
+python3 ingest.py --reset
+```
+
 
 ***
 
@@ -83,5 +90,5 @@ python ingest.py --reset
 Find the best reviewers for a submitted paper abstract:
 
 ```bash
-python app.py --abstract "Your paper abstract here"
+python3 app.py --abstract "Your paper abstract here"
 ```
