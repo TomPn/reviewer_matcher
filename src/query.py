@@ -1,8 +1,10 @@
 """Reviewer ranking pipeline — embed query abstract, search ChromaDB, aggregate scores."""
 
 from __future__ import annotations
+import csv
 import logging
 from collections import defaultdict
+from pathlib import Path
 from typing import Literal
 
 from . import embedder, vector_store
@@ -29,12 +31,45 @@ def _score_reviewer(similarities, strategy):
         return sum(similarities) / len(similarities)
 
 
+def _csv_flag_is_set(value: str) -> bool:
+    return value.strip().lower() in {"1", "true", "yes", "y", "x"}
+
+
+def _load_excluded_author_ids(
+    csv_path: str,
+    *,
+    exclude_low_volume: bool,
+    exclude_special_issue: bool,
+) -> set[str]:
+    if not exclude_low_volume and not exclude_special_issue:
+        return set()
+
+    path = Path(csv_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Reviewer CSV not found: {csv_path}")
+
+    excluded = set()
+    with open(path, newline="", encoding="utf-8-sig") as f:
+        for row in csv.DictReader(f):
+            author_id = row.get("S2 Author ID", "").strip()
+            if not author_id:
+                continue
+            low_volume = _csv_flag_is_set(row.get("Low Volume", ""))
+            special_issue = _csv_flag_is_set(row.get("Special Issue", ""))
+            if (exclude_low_volume and low_volume) or (exclude_special_issue and special_issue):
+                excluded.add(author_id)
+    return excluded
+
+
 def find_reviewers(
     abstract: str, *,
     db_path="data/chroma", collection_name="reviewer_abstracts",
     distance_metric="cosine", model_name="all-MiniLM-L6-v2",
     offline_mode=False, candidate_pool=200, top_n=10,
     scoring_strategy: Literal["mean_top3", "max", "mean_all"] = "mean_top3",
+    reviewer_csv_path="reviewer_id_matches.csv",
+    exclude_low_volume=False,
+    exclude_special_issue=False,
 ) -> list[dict]:
     if embedder._model is None:
         embedder.load_model(model_name, offline=offline_mode)
@@ -51,6 +86,11 @@ def find_reviewers(
     n_fetch = min(candidate_pool, db_size)
     log.info(f"Querying top {n_fetch} candidates from {db_size} documents...")
     candidates = vector_store.query(query_vec, n_results=n_fetch, collection=collection)
+    excluded_author_ids = _load_excluded_author_ids(
+        reviewer_csv_path,
+        exclude_low_volume=exclude_low_volume,
+        exclude_special_issue=exclude_special_issue,
+    )
 
     reviewer_sims   = defaultdict(list)
     reviewer_papers = defaultdict(list)
@@ -58,6 +98,9 @@ def find_reviewers(
 
     for hit in candidates:
         meta = hit["metadata"]
+        author_id = meta.get("author_id", "")
+        if author_id in excluded_author_ids:
+            continue
         name = meta.get("reviewer_name", "")
         sim  = hit["similarity"]
         reviewer_sims[name].append(sim)
@@ -70,7 +113,6 @@ def find_reviewers(
             "paper_url":  _semantic_scholar_url("paper", meta.get("paper_id", "")),
         })
         if name not in reviewer_meta:
-            author_id = meta.get("author_id", "")
             reviewer_meta[name] = {
                 "affiliation": meta.get("reviewer_affiliation", ""),
                 "author_id": author_id,

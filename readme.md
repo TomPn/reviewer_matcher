@@ -53,8 +53,12 @@ Required columns:
 | `Input Affiliation` | Reviewer's institution |
 | `Matched Name` | Name as it appears on Semantic Scholar |
 | `S2 Author ID` | Semantic Scholar author ID (from their profile URL) |
+| `Low Volume` | Optional flag for reviewers who should be excluded with `--exclude-low-volume` |
+| `Special Issue` | Optional flag for reviewers who should be excluded with `--exclude-special-issue` |
 
 Rows with a blank `S2 Author ID` are skipped during ingestion.
+
+Flag values are checked at query time, so you can update `Low Volume` or `Special Issue` in the CSV without rebuilding ChromaDB.
 
 ### Finding an Author's S2 Author ID
 
@@ -103,4 +107,12 @@ Find the best reviewers for a submitted paper abstract:
 
 ```bash
 python3 app.py --abstract "Your paper abstract here"
+```
+
+Exclude reviewers marked as low-volume or special-issue editors in `reviewer_id_matches.csv`:
+
+```bash
+python3 app.py --abstract "Your paper abstract here" --exclude-low-volume
+python3 app.py --abstract "Your paper abstract here" --exclude-special-issue
+python3 app.py --abstract "Your paper abstract here" --exclude-low-volume --exclude-special-issue
 ```

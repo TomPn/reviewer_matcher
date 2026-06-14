@@ -112,6 +112,10 @@ def _build_parser():
     p.add_argument("--strategy",    default=config.SCORING_STRATEGY,
                    choices=["mean_top3", "max", "mean_all"])
     p.add_argument("--show-papers", type=int, default=1)
+    p.add_argument("--exclude-low-volume", action="store_true",
+                   help="Exclude reviewers marked Low Volume in reviewer_id_matches.csv")
+    p.add_argument("--exclude-special-issue", action="store_true",
+                   help="Exclude reviewers marked Special Issue in reviewer_id_matches.csv")
     p.add_argument("--offline",     action="store_true", default=config.OFFLINE_MODE)
     p.add_argument("-v", "--verbose", action="store_true")
     return p
@@ -151,6 +155,9 @@ def main():
         candidate_pool=args.candidates,
         top_n=args.top_n,
         scoring_strategy=args.strategy,
+        reviewer_csv_path=config.REVIEWER_ID_MATCHES_CSV,
+        exclude_low_volume=args.exclude_low_volume,
+        exclude_special_issue=args.exclude_special_issue,
     )
     _print_results(results, show_papers=args.show_papers, scoring_strategy=args.strategy)
 
