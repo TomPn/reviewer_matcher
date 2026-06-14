@@ -8,8 +8,8 @@ S2_API_KEY                 = "s2k-DZUfEpbDRRTwJSI4w5TjS1geiAZZk6V6xm0xDpMo"
 S2_MAX_PAPERS_PER_REVIEWER = 30
 
 # Embedding Model (local after first download, ~90 MB)
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-OFFLINE_MODE    = False
+EMBEDDING_MODEL = "models/all-MiniLM-L6-v2"
+OFFLINE_MODE    = True
 
 # Vector Database (offline)
 CHROMA_DB_PATH         = "data/chroma"

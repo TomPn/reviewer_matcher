@@ -66,6 +66,19 @@ Rows with a blank `S2 Author ID` are skipped during ingestion.
 https://www.semanticscholar.org/author/Sharifa-Alghowinem/145001530
                                                             ^ this is the ID
 ```
+
+***
+
+## Pre-downloading the Embedding Model
+
+To avoid the app attempting to download the model at runtime (and triggering HuggingFace Hub warnings), run this script once before using the app for the first time:
+
+```bash
+python3 download_model_once.py
+```
+
+This will download the sentence embedding model and cache it locally. After this step, the app will run fully offline — no internet connection or HuggingFace account is required.
+
 ***
 
 ## Ingesting Reviewers
@@ -81,7 +94,6 @@ To add a new reviewer, add their row to `reviewer_id_matches.csv` then rebuild t
 ```bash
 python3 ingest.py --reset
 ```
-
 
 ***
 

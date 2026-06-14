@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import os
 from typing import Union
+from pathlib import Path
 
 log = logging.getLogger(__name__)
 
@@ -11,21 +12,27 @@ _model = None
 _model_name: str = ""
 
 
-def load_model(model_name: str, offline: bool = False) -> None:
+def load_model(model_name_or_path: str, offline: bool = True):
     global _model, _model_name
-    try:
-        from sentence_transformers import SentenceTransformer
-    except ImportError as e:
-        raise ImportError("Run: pip install sentence-transformers") from e
+    from sentence_transformers import SentenceTransformer
+
+    model_path = Path(model_name_or_path)
 
     if offline:
         os.environ["HF_HUB_OFFLINE"] = "1"
+        os.environ["TRANSFORMERS_OFFLINE"] = "1"
+        os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
 
-    log.info(f"Loading embedding model: '{model_name}'")
-    _model = SentenceTransformer(model_name)
-    _model_name = model_name
-    log.info(f"Model loaded. Dimension: {_model.get_sentence_embedding_dimension()}")
+    if not model_path.exists() or not model_path.is_dir():
+        raise FileNotFoundError(
+            f"Local embedding model not found: {model_name_or_path}\n"
+            f"Download the model once and place it in that folder."
+        )
 
+    log.info(f"Loading embedding model from local path: {model_path}")
+    _model = SentenceTransformer(str(model_path), local_files_only=True)
+    _model_name = model_name_or_path
+    return _model
 
 def _ensure_loaded():
     if _model is None:
