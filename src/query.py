@@ -10,6 +10,12 @@ from . import embedder, vector_store
 log = logging.getLogger(__name__)
 
 
+def _semantic_scholar_url(kind: str, identifier: str) -> str:
+    if not identifier:
+        return ""
+    return f"https://www.semanticscholar.org/{kind}/{identifier}"
+
+
 def _score_reviewer(similarities, strategy):
     if not similarities:
         return 0.0
@@ -60,9 +66,16 @@ def find_reviewers(
             "similarity": sim,
             "year":       meta.get("year", ""),
             "venue":      meta.get("venue", ""),
+            "paper_id":   meta.get("paper_id", ""),
+            "paper_url":  _semantic_scholar_url("paper", meta.get("paper_id", "")),
         })
         if name not in reviewer_meta:
-            reviewer_meta[name] = {"affiliation": meta.get("reviewer_affiliation", "")}
+            author_id = meta.get("author_id", "")
+            reviewer_meta[name] = {
+                "affiliation": meta.get("reviewer_affiliation", ""),
+                "author_id": author_id,
+                "author_url": _semantic_scholar_url("author", author_id),
+            }
 
     ranked = []
     for name, sims in reviewer_sims.items():
@@ -71,6 +84,8 @@ def find_reviewers(
         ranked.append({
             "reviewer":           name,
             "affiliation":        reviewer_meta[name]["affiliation"],
+            "author_id":          reviewer_meta[name]["author_id"],
+            "author_url":         reviewer_meta[name]["author_url"],
             "score":              round(score, 4),
             "top_paper_score":    round(max(sims), 4),
             "matching_papers":    len(sims),

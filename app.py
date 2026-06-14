@@ -57,6 +57,7 @@ def _print_results(results, show_papers=1, scoring_strategy="mean_top3"):
         reviewer    = r["reviewer"]
         affiliation = r["affiliation"] or "—"
         n_papers    = r["matching_papers"]
+        author_url  = r.get("author_url", "")
 
         print(
             f"  {BOLD}{rank:>2}.{RESET} {CYAN}{reviewer}{RESET}\n"
@@ -64,11 +65,15 @@ def _print_results(results, show_papers=1, scoring_strategy="mean_top3"):
             f"      Score: {GREEN}{score:.4f}{RESET}  {_bar(score)}  "
             f"({n_papers} matching paper{'s' if n_papers != 1 else ''})"
         )
+        if author_url:
+            print(f"      {DIM}AE Semantic Scholar: {author_url}{RESET}")
         if show_papers > 0:
             p = r["top_matching_paper"]
             title = p["title"] or "(untitled)"
             year_str = f"({p.get('year', '')})" if p.get("year") else ""
             print(f"         {DIM} [{p['similarity']:.3f}] {title[:70]} {year_str}{RESET}")
+            if p.get("paper_url"):
+                print(f"         {DIM}Document: {p['paper_url']}{RESET}")
         print()
 
     print(f"  {DIM}Tip: run `python app.py --help` for all options.{RESET}\n")
